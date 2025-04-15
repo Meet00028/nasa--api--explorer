@@ -42,6 +42,11 @@ def get_mars_photos():
         nasa = get_nasa_explorer()
         logger.info(f"Fetching Mars photos for rover: {rover}")
         photos = nasa.get_mars_photos(rover=rover, sol=int(sol), camera=camera)
+        
+        if 'error' in photos:
+            logger.warning(f"Mars Photos Warning: {photos['error']}")
+            return jsonify(photos), 404
+            
         logger.info("Mars photos fetched successfully")
         return jsonify(photos)
     except Exception as e:

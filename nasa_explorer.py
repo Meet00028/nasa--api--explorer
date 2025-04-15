@@ -34,6 +34,12 @@ class NASAExplorer:
     def get_mars_photos(self, rover="curiosity", sol=1000, camera="FHAZ"):
         """Get Mars photos from specified rover."""
         try:
+            # Check if rover is active
+            active_rovers = ["curiosity", "perseverance", "opportunity"]
+            if rover.lower() not in active_rovers:
+                self.logger.warning(f"Rover {rover} is not currently active. Active rovers are: {', '.join(active_rovers)}")
+                return {"error": f"Rover {rover} is not currently active. Try one of: {', '.join(active_rovers)}"}
+
             params = {
                 'api_key': self.api_key,
                 'sol': sol,
@@ -41,10 +47,17 @@ class NASAExplorer:
             }
             response = requests.get(f"{self.mars_url}/{rover}/photos", params=params)
             response.raise_for_status()
-            return response.json()
+            data = response.json()
+            
+            # Check if photos were found
+            if not data.get('photos'):
+                self.logger.warning(f"No photos found for rover {rover} on sol {sol} with camera {camera}")
+                return {"error": f"No photos found for rover {rover} on sol {sol} with camera {camera}"}
+                
+            return data
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Error fetching Mars photos: {str(e)}")
-            return None
+            return {"error": f"Error fetching Mars photos: {str(e)}"}
     
     def get_epic_images(self, date=None):
         """Get Earth Polychromatic Imaging Camera (EPIC) images."""
