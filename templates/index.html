@@ -10,9 +10,23 @@
             max-width: 100%;
             height: auto;
             margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .card {
             margin: 20px 0;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background-color: #f8d7da;
         }
     </style>
 </head>
@@ -27,7 +41,7 @@
             </div>
             <div class="card-body">
                 <div id="apod-content">
-                    <p>Loading...</p>
+                    <div class="loading">Loading APOD...</div>
                 </div>
             </div>
         </div>
@@ -46,7 +60,7 @@
                     </select>
                 </div>
                 <div id="mars-content">
-                    <p>Loading...</p>
+                    <div class="loading">Loading Mars photos...</div>
                 </div>
             </div>
         </div>
@@ -58,25 +72,45 @@
             </div>
             <div class="card-body">
                 <div id="epic-content">
-                    <p>Loading...</p>
+                    <div class="loading">Loading EPIC images...</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // Function to safely get image URL
+        function getImageUrl(data) {
+            if (!data) return null;
+            if (data.url) return data.url;
+            if (data.hdurl) return data.hdurl;
+            if (data.img_src) return data.img_src;
+            return null;
+        }
+
         // Function to fetch and display APOD
         async function fetchAPOD() {
             try {
                 const response = await fetch('/api/apod');
+                if (!response.ok) throw new Error('Failed to fetch APOD');
+                
                 const data = await response.json();
+                if (!data) throw new Error('No data received');
+
+                const imageUrl = getImageUrl(data);
+                if (!imageUrl) throw new Error('No image URL found');
+
                 document.getElementById('apod-content').innerHTML = `
-                    <h3>${data.title}</h3>
-                    <img src="${data.url}" class="nasa-image" alt="${data.title}">
-                    <p>${data.explanation}</p>
+                    <h3>${data.title || 'Untitled'}</h3>
+                    <img src="${imageUrl}" class="nasa-image" alt="${data.title || 'NASA Image'}" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
+                    <p>${data.explanation || 'No explanation available'}</p>
                 `;
             } catch (error) {
-                document.getElementById('apod-content').innerHTML = `<p>Error loading APOD: ${error}</p>`;
+                document.getElementById('apod-content').innerHTML = `
+                    <div class="error-message">
+                        Error loading APOD: ${error.message}
+                    </div>
+                `;
             }
         }
 
@@ -85,19 +119,28 @@
             const rover = document.getElementById('rover-select').value;
             try {
                 const response = await fetch(`/api/mars?rover=${rover}`);
+                if (!response.ok) throw new Error('Failed to fetch Mars photos');
+                
                 const data = await response.json();
-                if (data.photos && data.photos.length > 0) {
-                    const photo = data.photos[0];
-                    document.getElementById('mars-content').innerHTML = `
-                        <h3>${photo.rover.name} - ${photo.camera.full_name}</h3>
-                        <img src="${photo.img_src}" class="nasa-image" alt="Mars Rover Photo">
-                        <p>Sol: ${photo.sol}</p>
-                    `;
-                } else {
-                    document.getElementById('mars-content').innerHTML = '<p>No photos found</p>';
+                if (!data || !data.photos || data.photos.length === 0) {
+                    throw new Error('No photos found for this rover');
                 }
+
+                const photo = data.photos[0];
+                const imageUrl = getImageUrl(photo);
+                if (!imageUrl) throw new Error('No image URL found');
+
+                document.getElementById('mars-content').innerHTML = `
+                    <h3>${photo.rover?.name || 'Unknown Rover'} - ${photo.camera?.full_name || 'Unknown Camera'}</h3>
+                    <img src="${imageUrl}" class="nasa-image" alt="Mars Rover Photo" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
+                    <p>Sol: ${photo.sol || 'Unknown'}</p>
+                `;
             } catch (error) {
-                document.getElementById('mars-content').innerHTML = `<p>Error loading Mars photos: ${error}</p>`;
+                document.getElementById('mars-content').innerHTML = `
+                    <div class="error-message">
+                        Error loading Mars photos: ${error.message}
+                    </div>
+                `;
             }
         }
 
@@ -105,21 +148,30 @@
         async function fetchEPIC() {
             try {
                 const response = await fetch('/api/epic');
+                if (!response.ok) throw new Error('Failed to fetch EPIC images');
+                
                 const data = await response.json();
-                if (data && data.length > 0) {
-                    const image = data[0];
-                    const date = image.date.split(' ')[0].replace('-', '/');
-                    const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${date}/png/${image.image}.png`;
-                    document.getElementById('epic-content').innerHTML = `
-                        <h3>Earth from Space</h3>
-                        <img src="${imageUrl}" class="nasa-image" alt="EPIC Earth Image">
-                        <p>Date: ${image.date}</p>
-                    `;
-                } else {
-                    document.getElementById('epic-content').innerHTML = '<p>No EPIC images found</p>';
+                if (!data || data.length === 0) {
+                    throw new Error('No EPIC images found');
                 }
+
+                const image = data[0];
+                const date = image.date?.split(' ')[0]?.replace('-', '/');
+                if (!date || !image.image) throw new Error('Invalid image data');
+
+                const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${date}/png/${image.image}.png`;
+                
+                document.getElementById('epic-content').innerHTML = `
+                    <h3>Earth from Space</h3>
+                    <img src="${imageUrl}" class="nasa-image" alt="EPIC Earth Image" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
+                    <p>Date: ${image.date || 'Unknown'}</p>
+                `;
             } catch (error) {
-                document.getElementById('epic-content').innerHTML = `<p>Error loading EPIC images: ${error}</p>`;
+                document.getElementById('epic-content').innerHTML = `
+                    <div class="error-message">
+                        Error loading EPIC images: ${error.message}
+                    </div>
+                `;
             }
         }
 
