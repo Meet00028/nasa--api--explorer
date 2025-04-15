@@ -41,7 +41,7 @@ def get_mars_photos():
     try:
         nasa = get_nasa_explorer()
         logger.info(f"Fetching Mars photos for rover: {rover}")
-        photos = nasa.get_mars_photos(rover, int(sol), camera)
+        photos = nasa.get_mars_photos(rover=rover, sol=int(sol), camera=camera)
         logger.info("Mars photos fetched successfully")
         return jsonify(photos)
     except Exception as e:

@@ -31,15 +31,15 @@ class NASAExplorer:
             self.logger.error(f"Error fetching APOD: {str(e)}")
             return None
     
-    def get_mars_photos(self, sol=1000, camera="FHAZ"):
-        """Get Mars photos from Curiosity rover."""
+    def get_mars_photos(self, rover="curiosity", sol=1000, camera="FHAZ"):
+        """Get Mars photos from specified rover."""
         try:
             params = {
                 'api_key': self.api_key,
                 'sol': sol,
                 'camera': camera
             }
-            response = requests.get(self.mars_url, params=params)
+            response = requests.get(f"{self.mars_url}/{rover}/photos", params=params)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
