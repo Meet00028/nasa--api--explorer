@@ -88,11 +88,23 @@
             return null;
         }
 
+        // Function to show error message
+        function showError(elementId, message) {
+            document.getElementById(elementId).innerHTML = `
+                <div class="error-message">
+                    ${message}
+                </div>
+            `;
+        }
+
         // Function to fetch and display APOD
         async function fetchAPOD() {
             try {
                 const response = await fetch('/api/apod');
-                if (!response.ok) throw new Error('Failed to fetch APOD');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch APOD');
+                }
                 
                 const data = await response.json();
                 if (!data) throw new Error('No data received');
@@ -106,11 +118,7 @@
                     <p>${data.explanation || 'No explanation available'}</p>
                 `;
             } catch (error) {
-                document.getElementById('apod-content').innerHTML = `
-                    <div class="error-message">
-                        Error loading APOD: ${error.message}
-                    </div>
-                `;
+                showError('apod-content', `Error loading APOD: ${error.message}`);
             }
         }
 
@@ -119,7 +127,10 @@
             const rover = document.getElementById('rover-select').value;
             try {
                 const response = await fetch(`/api/mars?rover=${rover}`);
-                if (!response.ok) throw new Error('Failed to fetch Mars photos');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch Mars photos');
+                }
                 
                 const data = await response.json();
                 if (!data || !data.photos || data.photos.length === 0) {
@@ -136,11 +147,7 @@
                     <p>Sol: ${photo.sol || 'Unknown'}</p>
                 `;
             } catch (error) {
-                document.getElementById('mars-content').innerHTML = `
-                    <div class="error-message">
-                        Error loading Mars photos: ${error.message}
-                    </div>
-                `;
+                showError('mars-content', `Error loading Mars photos: ${error.message}`);
             }
         }
 
@@ -148,7 +155,10 @@
         async function fetchEPIC() {
             try {
                 const response = await fetch('/api/epic');
-                if (!response.ok) throw new Error('Failed to fetch EPIC images');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch EPIC images');
+                }
                 
                 const data = await response.json();
                 if (!data || data.length === 0) {
@@ -167,11 +177,7 @@
                     <p>Date: ${image.date || 'Unknown'}</p>
                 `;
             } catch (error) {
-                document.getElementById('epic-content').innerHTML = `
-                    <div class="error-message">
-                        Error loading EPIC images: ${error.message}
-                    </div>
-                `;
+                showError('epic-content', `Error loading EPIC images: ${error.message}`);
             }
         }
 

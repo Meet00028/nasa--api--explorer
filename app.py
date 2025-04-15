@@ -1,8 +1,10 @@
 from flask import Flask, render_template, request, jsonify
 from nasa_explorer import NASAExplorer
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
 # Initialize NASAExplorer only when needed
 def get_nasa_explorer():
@@ -22,6 +24,7 @@ def get_apod():
         apod = nasa.get_apod(date)
         return jsonify(apod)
     except Exception as e:
+        print(f"APOD Error: {str(e)}")  # Log the error
         return jsonify({'error': str(e)}), 400
 
 @app.route('/api/mars')
@@ -34,6 +37,7 @@ def get_mars_photos():
         photos = nasa.get_mars_photos(rover, int(sol), camera)
         return jsonify(photos)
     except Exception as e:
+        print(f"Mars Photos Error: {str(e)}")  # Log the error
         return jsonify({'error': str(e)}), 400
 
 @app.route('/api/epic')
@@ -44,6 +48,7 @@ def get_epic():
         epic = nasa.get_epic_images(date)
         return jsonify(epic)
     except Exception as e:
+        print(f"EPIC Error: {str(e)}")  # Log the error
         return jsonify({'error': str(e)}), 400
 
 # This is required for Vercel
