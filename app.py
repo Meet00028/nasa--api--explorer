@@ -3,7 +3,12 @@ from nasa_explorer import NASAExplorer
 import os
 
 app = Flask(__name__)
-nasa = NASAExplorer()
+
+# Initialize NASAExplorer only when needed
+def get_nasa_explorer():
+    if not hasattr(app, 'nasa'):
+        app.nasa = NASAExplorer()
+    return app.nasa
 
 @app.route('/')
 def home():
@@ -13,6 +18,7 @@ def home():
 def get_apod():
     date = request.args.get('date')
     try:
+        nasa = get_nasa_explorer()
         apod = nasa.get_apod(date)
         return jsonify(apod)
     except Exception as e:
@@ -24,6 +30,7 @@ def get_mars_photos():
     sol = request.args.get('sol', 1000)
     camera = request.args.get('camera', 'FHAZ')
     try:
+        nasa = get_nasa_explorer()
         photos = nasa.get_mars_photos(rover, int(sol), camera)
         return jsonify(photos)
     except Exception as e:
@@ -33,10 +40,11 @@ def get_mars_photos():
 def get_epic():
     date = request.args.get('date')
     try:
+        nasa = get_nasa_explorer()
         epic = nasa.get_epic_images(date)
         return jsonify(epic)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-if __name__ == '__main__':
-    app.run(debug=True) 
+# This is required for Vercel
+app = app 
