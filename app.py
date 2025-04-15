@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 from nasa_explorer import NASAExplorer
-import os
-from flask_cors import CORS
 import logging
+from flask_cors import CORS
+from config import NASA_API_KEY, APOD_URL, MARS_URL, EPIC_URL
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -11,16 +11,10 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-# Initialize NASAExplorer only when needed
 def get_nasa_explorer():
-    if not hasattr(app, 'nasa'):
-        api_key = os.getenv('NASA_API_KEY')
-        logger.info(f"NASA API Key loaded: {'Yes' if api_key else 'No'}")
-        if not api_key:
-            logger.error("NASA_API_KEY environment variable is not set")
-            raise ValueError("NASA_API_KEY environment variable is not set")
-        app.nasa = NASAExplorer()
-    return app.nasa
+    """Initialize and return a NASAExplorer instance."""
+    logger.info("Initializing NASAExplorer instance")
+    return NASAExplorer(NASA_API_KEY, APOD_URL, MARS_URL, EPIC_URL)
 
 @app.route('/')
 def home():

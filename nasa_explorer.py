@@ -1,87 +1,63 @@
 import os
 import requests
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 from PIL import Image
 from io import BytesIO
 import logging
+from config import NASA_API_KEY
 
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
-
 class NASAExplorer:
-    def __init__(self):
-        self.api_key = os.getenv('NASA_API_KEY')
-        if not self.api_key:
-            raise ValueError("NASA API key not found. Please set NASA_API_KEY in .env file")
-        
-        self.base_url = "https://api.nasa.gov"
+    def __init__(self, api_key, apod_url, mars_url, epic_url):
+        """Initialize NASAExplorer with API key and endpoints."""
+        self.api_key = api_key
+        self.apod_url = apod_url
+        self.mars_url = mars_url
+        self.epic_url = epic_url
+        self.logger = logging.getLogger(__name__)
         logger.info("NASAExplorer initialized successfully")
         
     def get_apod(self, date=None):
-        """Get Astronomy Picture of the Day"""
-        endpoint = f"{self.base_url}/planetary/apod"
-        # Use yesterday's date to ensure we have an image
-        if date is None:
-            date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        params = {
-            'api_key': self.api_key,
-            'date': date
-        }
-        
-        logger.info(f"Fetching APOD for date: {date}")
-        response = requests.get(endpoint, params=params)
-        logger.info(f"APOD Response status: {response.status_code}")
-        
-        if response.status_code != 200:
-            logger.error(f"APOD API Error: {response.text}")
-            raise Exception(f"APOD API Error: {response.text}")
-            
-        response.raise_for_status()
-        return response.json()
+        """Get Astronomy Picture of the Day."""
+        try:
+            params = {'api_key': self.api_key}
+            if date:
+                params['date'] = date
+            response = requests.get(self.apod_url, params=params)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Error fetching APOD: {str(e)}")
+            return None
     
-    def get_mars_photos(self, rover="curiosity", sol=1000, camera="FHAZ"):
-        """Get Mars Rover photos"""
-        endpoint = f"{self.base_url}/mars-photos/api/v1/rovers/{rover}/photos"
-        params = {
-            'api_key': self.api_key,
-            'sol': sol,
-            'camera': camera
-        }
-        
-        logger.info(f"Fetching Mars photos for rover: {rover}, sol: {sol}, camera: {camera}")
-        response = requests.get(endpoint, params=params)
-        logger.info(f"Mars Photos Response status: {response.status_code}")
-        
-        if response.status_code != 200:
-            logger.error(f"Mars Photos API Error: {response.text}")
-            raise Exception(f"Mars Photos API Error: {response.text}")
-            
-        response.raise_for_status()
-        return response.json()
+    def get_mars_photos(self, sol=1000, camera="FHAZ"):
+        """Get Mars photos from Curiosity rover."""
+        try:
+            params = {
+                'api_key': self.api_key,
+                'sol': sol,
+                'camera': camera
+            }
+            response = requests.get(self.mars_url, params=params)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Error fetching Mars photos: {str(e)}")
+            return None
     
     def get_epic_images(self, date=None):
-        """Get Earth Polychromatic Imaging Camera images"""
-        endpoint = f"{self.base_url}/EPIC/api/natural"
-        if date is None:
-            date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        params = {
-            'api_key': self.api_key,
-            'date': date
-        }
-        
-        logger.info(f"Fetching EPIC images for date: {date}")
-        response = requests.get(endpoint, params=params)
-        logger.info(f"EPIC Response status: {response.status_code}")
-        
-        if response.status_code != 200:
-            logger.error(f"EPIC API Error: {response.text}")
-            raise Exception(f"EPIC API Error: {response.text}")
-            
-        response.raise_for_status()
-        return response.json()
+        """Get Earth Polychromatic Imaging Camera (EPIC) images."""
+        try:
+            if not date:
+                date = datetime.now().strftime('%Y-%m-%d')
+            params = {'api_key': self.api_key}
+            response = requests.get(f"{self.epic_url}/{date}", params=params)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Error fetching EPIC images: {str(e)}")
+            return None
     
     def download_and_show_image(self, image_url, title="NASA Image"):
         """Download and display an image"""
@@ -101,19 +77,20 @@ class NASAExplorer:
 
 def main():
     try:
-        nasa = NASAExplorer()
+        nasa = NASAExplorer(NASA_API_KEY, "https://api.nasa.gov/planetary/apod", "https://api.nasa.gov/mars-photos/api/v1/rovers/curiosity/photos", "https://epic.gsfc.nasa.gov/archive/natural")
         
         # Get today's APOD
         print("\nFetching Astronomy Picture of the Day...")
         apod = nasa.get_apod(date="2024-04-15")
-        print(f"Title: {apod['title']}")
-        print(f"Explanation: {apod['explanation']}")
-        nasa.download_and_show_image(apod['url'], "Astronomy Picture of the Day")
+        if apod:
+            print(f"Title: {apod['title']}")
+            print(f"Explanation: {apod['explanation']}")
+            nasa.download_and_show_image(apod['url'], "Astronomy Picture of the Day")
         
         # Get Mars Rover photos
         print("\nFetching Mars Rover photos...")
         mars_photos = nasa.get_mars_photos()
-        if mars_photos['photos']:
+        if mars_photos and mars_photos['photos']:
             first_photo = mars_photos['photos'][0]
             print(f"Rover: {first_photo['rover']['name']}")
             print(f"Camera: {first_photo['camera']['full_name']}")
