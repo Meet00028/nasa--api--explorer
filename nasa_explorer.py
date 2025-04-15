@@ -4,6 +4,9 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from PIL import Image
 from io import BytesIO
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -15,6 +18,7 @@ class NASAExplorer:
             raise ValueError("NASA API key not found. Please set NASA_API_KEY in .env file")
         
         self.base_url = "https://api.nasa.gov"
+        logger.info("NASAExplorer initialized successfully")
         
     def get_apod(self, date=None):
         """Get Astronomy Picture of the Day"""
@@ -27,7 +31,14 @@ class NASAExplorer:
             'date': date
         }
         
+        logger.info(f"Fetching APOD for date: {date}")
         response = requests.get(endpoint, params=params)
+        logger.info(f"APOD Response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            logger.error(f"APOD API Error: {response.text}")
+            raise Exception(f"APOD API Error: {response.text}")
+            
         response.raise_for_status()
         return response.json()
     
@@ -40,7 +51,14 @@ class NASAExplorer:
             'camera': camera
         }
         
+        logger.info(f"Fetching Mars photos for rover: {rover}, sol: {sol}, camera: {camera}")
         response = requests.get(endpoint, params=params)
+        logger.info(f"Mars Photos Response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            logger.error(f"Mars Photos API Error: {response.text}")
+            raise Exception(f"Mars Photos API Error: {response.text}")
+            
         response.raise_for_status()
         return response.json()
     
@@ -54,13 +72,27 @@ class NASAExplorer:
             'date': date
         }
         
+        logger.info(f"Fetching EPIC images for date: {date}")
         response = requests.get(endpoint, params=params)
+        logger.info(f"EPIC Response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            logger.error(f"EPIC API Error: {response.text}")
+            raise Exception(f"EPIC API Error: {response.text}")
+            
         response.raise_for_status()
         return response.json()
     
     def download_and_show_image(self, image_url, title="NASA Image"):
         """Download and display an image"""
+        logger.info(f"Downloading image: {image_url}")
         response = requests.get(image_url)
+        logger.info(f"Image download status: {response.status_code}")
+        
+        if response.status_code != 200:
+            logger.error(f"Image download error: {response.text}")
+            raise Exception(f"Image download error: {response.text}")
+            
         response.raise_for_status()
         
         img = Image.open(BytesIO(response.content))
