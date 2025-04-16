@@ -213,10 +213,11 @@ def main():
         # Get EPIC images
         print("\nFetching EPIC images...")
         epic_images = nasa.get_epic_images()
-        if epic_images:
-            first_image = epic_images['images'][0]
-            image_url = f"https://epic.gsfc.nasa.gov/archive/natural/{first_image['date'].split()[0].replace('-', '/')}/png/{first_image['image']}.png"
-            nasa.download_and_show_image(image_url, "EPIC Earth Image")
+        if epic_images and epic_images['data']:
+            first_image = epic_images['data'][0]
+            print(f"Caption: {first_image['caption']}")
+            print(f"Date: {first_image['date']}")
+            nasa.download_and_show_image(first_image['image_url'], "EPIC Earth Image")
             
     except Exception as e:
         print(f"An error occurred: {str(e)}")
