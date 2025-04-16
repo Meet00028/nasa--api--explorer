@@ -5,43 +5,170 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NASA API Explorer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #0B3D91;
+            --secondary-color: #FC3D21;
+            --background-color: #f8f9fa;
+            --text-color: #212529;
+            --card-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nasa-logo {
+            height: 40px;
+            margin-right: 10px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+            background: white;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1.5rem;
+            border-radius: 15px 15px 0 0 !important;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
         .nasa-image {
             max-width: 100%;
             height: auto;
             margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
         }
-        .card {
-            margin: 20px 0;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+
+        .nasa-image:hover {
+            transform: scale(1.02);
         }
+
         .loading {
             text-align: center;
-            padding: 20px;
+            padding: 40px;
+            color: var(--primary-color);
         }
+
+        .loading i {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
         .error-message {
-            color: #dc3545;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            background-color: #f8d7da;
+            color: var(--secondary-color);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background-color: #fff3f3;
+            border: 1px solid var(--secondary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(11, 61, 145, 0.25);
+        }
+
+        .image-caption {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .card-header h2 {
+                font-size: 1.2rem;
+            }
+            .card-body {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">NASA API Explorer</h1>
-        
+    <nav class="navbar">
+        <div class="container">
+            <span class="navbar-brand">
+                <img src="https://www.nasa.gov/sites/default/files/thumbnails/image/nasa-logo-web-rgb.png" alt="NASA Logo" class="nasa-logo">
+                NASA API Explorer
+            </span>
+        </div>
+    </nav>
+
+    <div class="container">
         <!-- APOD Section -->
         <div class="card">
             <div class="card-header">
-                <h2>Astronomy Picture of the Day</h2>
+                <h2><i class="fas fa-star me-2"></i>Astronomy Picture of the Day</h2>
             </div>
             <div class="card-body">
                 <div id="apod-content">
-                    <div class="loading">Loading APOD...</div>
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading APOD...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -49,10 +176,11 @@
         <!-- Mars Photos Section -->
         <div class="card">
             <div class="card-header">
-                <h2>Mars Rover Photos</h2>
+                <h2><i class="fas fa-robot me-2"></i>Mars Rover Photos</h2>
             </div>
             <div class="card-body">
                 <div class="mb-3">
+                    <label for="rover-select" class="form-label">Select Rover:</label>
                     <select id="rover-select" class="form-select">
                         <option value="curiosity">Curiosity</option>
                         <option value="opportunity">Opportunity</option>
@@ -60,7 +188,10 @@
                     </select>
                 </div>
                 <div id="mars-content">
-                    <div class="loading">Loading Mars photos...</div>
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading Mars photos...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -68,11 +199,14 @@
         <!-- EPIC Section -->
         <div class="card">
             <div class="card-header">
-                <h2>Earth Polychromatic Imaging Camera</h2>
+                <h2><i class="fas fa-globe me-2"></i>Earth Polychromatic Imaging Camera</h2>
             </div>
             <div class="card-body">
                 <div id="epic-content">
-                    <div class="loading">Loading EPIC images...</div>
+                    <div class="loading">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading EPIC images...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,13 +226,25 @@
         function showError(elementId, message) {
             document.getElementById(elementId).innerHTML = `
                 <div class="error-message">
+                    <i class="fas fa-exclamation-circle"></i>
                     ${message}
+                </div>
+            `;
+        }
+
+        // Function to show loading state
+        function showLoading(elementId, message) {
+            document.getElementById(elementId).innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p>${message}</p>
                 </div>
             `;
         }
 
         // Function to fetch and display APOD
         async function fetchAPOD() {
+            showLoading('apod-content', 'Loading Astronomy Picture of the Day...');
             try {
                 const response = await fetch('/api/apod');
                 if (!response.ok) {
@@ -113,9 +259,14 @@
                 if (!imageUrl) throw new Error('No image URL found');
 
                 document.getElementById('apod-content').innerHTML = `
-                    <h3>${data.title || 'Untitled'}</h3>
-                    <img src="${imageUrl}" class="nasa-image" alt="${data.title || 'NASA Image'}" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
-                    <p>${data.explanation || 'No explanation available'}</p>
+                    <h3 class="mb-3">${data.title || 'Untitled'}</h3>
+                    <div class="position-relative">
+                        <img src="${imageUrl}" class="nasa-image" alt="${data.title || 'NASA Image'}" 
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
+                        <div class="image-caption">
+                            ${data.explanation || 'No explanation available'}
+                        </div>
+                    </div>
                 `;
             } catch (error) {
                 showError('apod-content', `Error loading APOD: ${error.message}`);
@@ -125,6 +276,7 @@
         // Function to fetch and display Mars photos
         async function fetchMarsPhotos() {
             const rover = document.getElementById('rover-select').value;
+            showLoading('mars-content', `Loading ${rover.charAt(0).toUpperCase() + rover.slice(1)} rover photos...`);
             try {
                 const response = await fetch(`/api/mars?rover=${rover}`);
                 if (!response.ok) {
@@ -142,9 +294,14 @@
                 if (!imageUrl) throw new Error('No image URL found');
 
                 document.getElementById('mars-content').innerHTML = `
-                    <h3>${photo.rover?.name || 'Unknown Rover'} - ${photo.camera?.full_name || 'Unknown Camera'}</h3>
-                    <img src="${imageUrl}" class="nasa-image" alt="Mars Rover Photo" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
-                    <p>Sol: ${photo.sol || 'Unknown'}</p>
+                    <h3 class="mb-3">${photo.rover?.name || 'Unknown Rover'} - ${photo.camera?.full_name || 'Unknown Camera'}</h3>
+                    <div class="position-relative">
+                        <img src="${imageUrl}" class="nasa-image" alt="Mars Rover Photo" 
+                             onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
+                        <div class="image-caption">
+                            Sol: ${photo.sol || 'Unknown'} | Earth Date: ${photo.earth_date || 'Unknown'}
+                        </div>
+                    </div>
                 `;
             } catch (error) {
                 showError('mars-content', `Error loading Mars photos: ${error.message}`);
@@ -153,6 +310,7 @@
 
         // Function to fetch and display EPIC images
         async function fetchEPIC() {
+            showLoading('epic-content', 'Loading Earth images...');
             try {
                 const response = await fetch('/api/epic');
                 if (!response.ok) {
@@ -161,20 +319,23 @@
                 }
                 
                 const data = await response.json();
-                if (!data || data.length === 0) {
+                if (!data || !data.images || data.images.length === 0) {
                     throw new Error('No EPIC images found');
                 }
 
-                const image = data[0];
-                const date = image.date?.split(' ')[0]?.replace('-', '/');
-                if (!date || !image.image) throw new Error('Invalid image data');
+                const image = data.images[0];
+                if (!image.url) throw new Error('Invalid image data');
 
-                const imageUrl = `https://epic.gsfc.nasa.gov/archive/natural/${date}/png/${image.image}.png`;
-                
                 document.getElementById('epic-content').innerHTML = `
-                    <h3>Earth from Space</h3>
-                    <img src="${imageUrl}" class="nasa-image" alt="EPIC Earth Image" onerror="this.onerror=null; this.src='https://via.placeholder.com/800x600?text=Image+Not+Available'">
-                    <p>Date: ${image.date || 'Unknown'}</p>
+                    <h3 class="mb-3">Earth from Space</h3>
+                    <div class="position-relative">
+                        <img src="${image.url}" class="nasa-image" alt="EPIC Earth Image" 
+                             onerror="this.onerror=null; this.src='@nasa-vhSz50AaFAs-unsplash.jpg'">
+                        <div class="image-caption">
+                            Date: ${image.date || 'Unknown'}<br>
+                            ${image.caption || 'A view of Earth from space'}
+                        </div>
+                    </div>
                 `;
             } catch (error) {
                 showError('epic-content', `Error loading EPIC images: ${error.message}`);
