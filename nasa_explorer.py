@@ -66,6 +66,17 @@ class NASAExplorer:
     
     def get_epic_images(self, date=None):
         """Get Earth Polychromatic Imaging Camera (EPIC) images."""
+        default_image = {
+            'status': 'success',
+            'message': 'Showing default Earth image',
+            'images': [{
+                'date': datetime.now().strftime('%Y-%m-%d'),
+                'image': 'default_earth',
+                'caption': 'Beautiful Earth from Space',
+                'url': '@nasa-vhSz50AaFAs-unsplash.jpg'
+            }]
+        }
+        
         try:
             # First get the list of available dates
             params = {'api_key': self.api_key}
@@ -74,16 +85,7 @@ class NASAExplorer:
             available_dates = response.json()
             
             if not available_dates:
-                return {
-                    'status': 'success',
-                    'message': 'Showing default Earth image',
-                    'data': [{
-                        'date': datetime.now().strftime('%Y-%m-%d'),
-                        'identifier': 'default_earth',
-                        'caption': 'Beautiful Earth from Space',
-                        'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
-                    }]
-                }
+                return default_image
             
             # If no date specified, use the most recent available date
             if not date:
@@ -95,19 +97,10 @@ class NASAExplorer:
             images = response.json()
             
             if not images:
-                return {
-                    'status': 'success',
-                    'message': 'Showing default Earth image',
-                    'data': [{
-                        'date': datetime.now().strftime('%Y-%m-%d'),
-                        'identifier': 'default_earth',
-                        'caption': 'Beautiful Earth from Space',
-                        'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
-                    }]
-                }
+                return default_image
             
             # Process the images to include the full image URL
-            valid_images = []
+            processed_images = []
             for image in images:
                 if not isinstance(image, dict):
                     continue
@@ -125,53 +118,28 @@ class NASAExplorer:
                 month = date[5:7]
                 day = date[8:10]
                 
-                valid_images.append({
+                processed_images.append({
                     'date': image_date,
-                    'identifier': image_id,
+                    'image': image_id,
                     'caption': caption,
-                    'image_url': f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
+                    'url': f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
                 })
             
-            if not valid_images:
-                return {
-                    'status': 'success',
-                    'message': 'Showing default Earth image',
-                    'data': [{
-                        'date': datetime.now().strftime('%Y-%m-%d'),
-                        'identifier': 'default_earth',
-                        'caption': 'Beautiful Earth from Space',
-                        'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
-                    }]
-                }
+            if not processed_images:
+                return default_image
             
             return {
                 'status': 'success',
-                'message': f'Successfully retrieved {len(valid_images)} EPIC images for {date}',
-                'data': valid_images
+                'message': f'Successfully retrieved {len(processed_images)} EPIC images for {date}',
+                'images': processed_images
             }
             
         except requests.exceptions.RequestException as e:
-            return {
-                'status': 'success',
-                'message': 'Showing default Earth image',
-                'data': [{
-                    'date': datetime.now().strftime('%Y-%m-%d'),
-                    'identifier': 'default_earth',
-                    'caption': 'Beautiful Earth from Space',
-                    'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
-                }]
-            }
+            logger.error(f"Error fetching EPIC images: {str(e)}")
+            return default_image
         except (ValueError, KeyError, IndexError) as e:
-            return {
-                'status': 'success',
-                'message': 'Showing default Earth image',
-                'data': [{
-                    'date': datetime.now().strftime('%Y-%m-%d'),
-                    'identifier': 'default_earth',
-                    'caption': 'Beautiful Earth from Space',
-                    'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
-                }]
-            }
+            logger.error(f"Error processing EPIC images: {str(e)}")
+            return default_image
     
     def download_and_show_image(self, image_url, title="NASA Image"):
         """Download and display an image"""
@@ -212,12 +180,12 @@ def main():
         
         # Get EPIC images
         print("\nFetching EPIC images...")
-        epic_images = nasa.get_epic_images()
-        if epic_images and epic_images['data']:
-            first_image = epic_images['data'][0]
+        epic_response = nasa.get_epic_images()
+        if epic_response and epic_response['images']:
+            first_image = epic_response['images'][0]
             print(f"Caption: {first_image['caption']}")
             print(f"Date: {first_image['date']}")
-            nasa.download_and_show_image(first_image['image_url'], "EPIC Earth Image")
+            nasa.download_and_show_image(first_image['url'], "EPIC Earth Image")
             
     except Exception as e:
         print(f"An error occurred: {str(e)}")
