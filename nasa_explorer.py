@@ -67,56 +67,59 @@ class NASAExplorer:
     def get_epic_images(self, date=None):
         """Get Earth Polychromatic Imaging Camera (EPIC) images."""
         try:
-            if not date:
-                date = datetime.now().strftime('%Y-%m-%d')
-            
-            params = {
-                'api_key': self.api_key,
-                'date': date
-            }
-            
-            response = requests.get(self.epic_url, params=params)
+            # First get the list of available dates
+            params = {'api_key': self.api_key}
+            response = requests.get(f"{self.epic_url}/natural/available", params=params)
             response.raise_for_status()
+            available_dates = response.json()
             
-            data = response.json()
+            if not available_dates:
+                return {
+                    'status': 'success',
+                    'message': 'No EPIC images available',
+                    'data': []
+                }
             
-            if not isinstance(data, list):
-                raise ValueError("Invalid response format from EPIC API")
+            # If no date specified, use the most recent available date
+            if not date:
+                date = available_dates[0]
             
-            if not data:
+            # Get images for the specified date
+            response = requests.get(f"{self.epic_url}/natural/date/{date}", params=params)
+            response.raise_for_status()
+            images = response.json()
+            
+            if not images:
                 return {
                     'status': 'success',
                     'message': f'No EPIC images available for {date}',
                     'data': []
                 }
             
-            # Validate each image object has required properties
+            # Process the images to include the full image URL
             valid_images = []
-            for image in data:
+            for image in images:
                 if not isinstance(image, dict):
                     continue
                     
-                # Check for required properties with fallbacks
-                image_date = image.get('date')
-                if not image_date:
-                    continue
-                    
-                identifier = image.get('identifier')
+                # Extract required fields with fallbacks
+                image_id = image.get('image')
                 caption = image.get('caption', '')
-                image_url = image.get('image')
+                image_date = image.get('date', date)
                 
-                if not all([identifier, image_url]):
+                if not image_id:
                     continue
                 
-                # Construct the full image URL
-                year, month, day = image_date.split(' ')[0].split('-')
-                full_image_url = f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_url}.png"
+                # Construct the image URL using the correct format
+                year = date[:4]
+                month = date[5:7]
+                day = date[8:10]
                 
                 valid_images.append({
                     'date': image_date,
-                    'identifier': identifier,
+                    'identifier': image_id,
                     'caption': caption,
-                    'image_url': full_image_url
+                    'image_url': f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
                 })
             
             if not valid_images:
