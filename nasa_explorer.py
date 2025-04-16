@@ -81,7 +81,7 @@ class NASAExplorer:
                         'date': datetime.now().strftime('%Y-%m-%d'),
                         'identifier': 'default_earth',
                         'caption': 'Beautiful Earth from Space',
-                        'image_url': 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80'
+                        'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
                     }]
                 }
             
@@ -102,7 +102,7 @@ class NASAExplorer:
                         'date': datetime.now().strftime('%Y-%m-%d'),
                         'identifier': 'default_earth',
                         'caption': 'Beautiful Earth from Space',
-                        'image_url': 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80'
+                        'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
                     }]
                 }
             
@@ -140,7 +140,7 @@ class NASAExplorer:
                         'date': datetime.now().strftime('%Y-%m-%d'),
                         'identifier': 'default_earth',
                         'caption': 'Beautiful Earth from Space',
-                        'image_url': 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80'
+                        'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
                     }]
                 }
             
@@ -158,7 +158,7 @@ class NASAExplorer:
                     'date': datetime.now().strftime('%Y-%m-%d'),
                     'identifier': 'default_earth',
                     'caption': 'Beautiful Earth from Space',
-                    'image_url': 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80'
+                    'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
                 }]
             }
         except (ValueError, KeyError, IndexError) as e:
@@ -169,7 +169,7 @@ class NASAExplorer:
                     'date': datetime.now().strftime('%Y-%m-%d'),
                     'identifier': 'default_earth',
                     'caption': 'Beautiful Earth from Space',
-                    'image_url': 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80'
+                    'image_url': '@nasa-vhSz50AaFAs-unsplash.jpg'
                 }]
             }
     
