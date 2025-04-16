@@ -67,82 +67,82 @@ class NASAExplorer:
     def get_epic_images(self, date=None):
         """Get Earth Polychromatic Imaging Camera (EPIC) images."""
         try:
-            # First get the list of available dates
-            params = {'api_key': self.api_key}
-            response = requests.get(f"{self.epic_url}/natural/available", params=params)
-            response.raise_for_status()
-            available_dates = response.json()
+            if not date:
+                date = datetime.now().strftime('%Y-%m-%d')
             
-            if not available_dates:
-                self.logger.warning("No EPIC images available, using default Earth image")
+            params = {
+                'api_key': self.api_key,
+                'date': date
+            }
+            
+            response = requests.get(self.epic_url, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            if not isinstance(data, list):
+                raise ValueError("Invalid response format from EPIC API")
+            
+            if not data:
                 return {
-                    "images": [{
-                        "image": "default_earth",
-                        "caption": "Default Earth Image",
-                        "date": datetime.now().strftime('%Y-%m-%d'),
-                        "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80"
-                    }]
+                    'status': 'success',
+                    'message': f'No EPIC images available for {date}',
+                    'data': []
                 }
             
-            # Get the most recent date
-            most_recent_date = available_dates[0]
-            
-            # Get images for the most recent date
-            response = requests.get(f"{self.epic_url}/natural/date/{most_recent_date}", params=params)
-            response.raise_for_status()
-            images = response.json()
-            
-            if not images:
-                self.logger.warning(f"No EPIC images found for date: {most_recent_date}, using default Earth image")
-                return {
-                    "images": [{
-                        "image": "default_earth",
-                        "caption": "Default Earth Image",
-                        "date": datetime.now().strftime('%Y-%m-%d'),
-                        "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80"
-                    }]
-                }
-            
-            # Process the images to include the full image URL
-            processed_images = []
-            for image in images:
-                if not image or 'image' not in image:
+            # Validate each image object has required properties
+            valid_images = []
+            for image in data:
+                if not isinstance(image, dict):
                     continue
                     
-                # Construct the image URL using the correct format
-                image_id = image['image']
-                year = most_recent_date[:4]
-                month = most_recent_date[5:7]
-                day = most_recent_date[8:10]
+                # Check for required properties with fallbacks
+                image_date = image.get('date')
+                if not image_date:
+                    continue
+                    
+                identifier = image.get('identifier')
+                caption = image.get('caption', '')
+                image_url = image.get('image')
                 
-                processed_images.append({
-                    "image": image_id,
-                    "caption": image.get('caption', 'EPIC Earth Image'),
-                    "date": image.get('date', most_recent_date),
-                    "url": f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
+                if not all([identifier, image_url]):
+                    continue
+                
+                # Construct the full image URL
+                year, month, day = image_date.split(' ')[0].split('-')
+                full_image_url = f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_url}.png"
+                
+                valid_images.append({
+                    'date': image_date,
+                    'identifier': identifier,
+                    'caption': caption,
+                    'image_url': full_image_url
                 })
             
-            if not processed_images:
-                self.logger.warning("No valid EPIC images found, using default Earth image")
+            if not valid_images:
                 return {
-                    "images": [{
-                        "image": "default_earth",
-                        "caption": "Default Earth Image",
-                        "date": datetime.now().strftime('%Y-%m-%d'),
-                        "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80"
-                    }]
+                    'status': 'success',
+                    'message': f'No valid EPIC images found for {date}',
+                    'data': []
                 }
             
-            return {"images": processed_images}
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"Error fetching EPIC images: {str(e)}, using default Earth image")
             return {
-                "images": [{
-                    "image": "default_earth",
-                    "caption": "Default Earth Image",
-                    "date": datetime.now().strftime('%Y-%m-%d'),
-                    "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80"
-                }]
+                'status': 'success',
+                'message': f'Successfully retrieved {len(valid_images)} EPIC images for {date}',
+                'data': valid_images
+            }
+            
+        except requests.exceptions.RequestException as e:
+            return {
+                'status': 'error',
+                'message': f'Error loading EPIC images: {str(e)}',
+                'data': None
+            }
+        except (ValueError, KeyError, IndexError) as e:
+            return {
+                'status': 'error',
+                'message': f'Error processing EPIC images: {str(e)}',
+                'data': None
             }
     
     def download_and_show_image(self, image_url, title="NASA Image"):
