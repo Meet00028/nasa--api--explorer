@@ -1,32 +1,49 @@
 # Standard library imports
 import logging
+import os
+from typing import Dict, Any
 
 # Third-party imports
-from flask import Flask, jsonify, render_template, request
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    request,
+    Response
+)
 from flask_cors import CORS
+from werkzeug.local import LocalProxy
 
 # Local imports
 from nasa_explorer import NASAExplorer
-from config import NASA_API_KEY, APOD_URL, MARS_URL, EPIC_URL
+from config import (
+    NASA_API_KEY,
+    APOD_URL,
+    MARS_URL,
+    EPIC_URL
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize Flask app
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
-def get_nasa_explorer():
+def get_nasa_explorer() -> NASAExplorer:
     """Initialize and return a NASAExplorer instance."""
     logger.info("Initializing NASAExplorer instance")
     return NASAExplorer(NASA_API_KEY, APOD_URL, MARS_URL, EPIC_URL)
 
 @app.route('/')
-def home():
+def home() -> str:
+    """Render the home page."""
     return render_template('index.html')
 
 @app.route('/api/apod')
-def get_apod():
+def get_apod() -> Response:
+    """Get Astronomy Picture of the Day."""
     date = request.args.get('date')
     try:
         nasa = get_nasa_explorer()
@@ -39,7 +56,8 @@ def get_apod():
         return jsonify({'error': str(e)}), 400
 
 @app.route('/api/mars')
-def get_mars_photos():
+def get_mars_photos() -> Response:
+    """Get Mars Rover photos."""
     rover = request.args.get('rover', 'curiosity')
     sol = request.args.get('sol', 1000)
     camera = request.args.get('camera', 'FHAZ')
@@ -59,7 +77,8 @@ def get_mars_photos():
         return jsonify({'error': str(e)}), 400
 
 @app.route('/api/epic')
-def get_epic():
+def get_epic() -> Response:
+    """Get EPIC (Earth Polychromatic Imaging Camera) images."""
     date = request.args.get('date')
     try:
         nasa = get_nasa_explorer()
@@ -76,5 +95,5 @@ def get_epic():
         logger.error(f"EPIC Error: {str(e)}")
         return jsonify({'error': str(e)}), 400
 
-# This is required for Vercel
-app = app 
+# For production deployment
+application = app 
