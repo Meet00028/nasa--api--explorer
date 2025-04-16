@@ -64,7 +64,7 @@ class NASAExplorer:
         try:
             # First get the list of available dates
             params = {'api_key': self.api_key}
-            response = requests.get(f"{self.epic_url}/available", params=params)
+            response = requests.get(f"{self.epic_url}/natural/available", params=params)
             response.raise_for_status()
             available_dates = response.json()
             
