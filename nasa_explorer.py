@@ -62,30 +62,35 @@ class NASAExplorer:
     def get_epic_images(self, date=None):
         """Get Earth Polychromatic Imaging Camera (EPIC) images."""
         try:
-            if not date:
-                # Get yesterday's date as EPIC images are typically available with a 1-day delay
-                date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-            
-            # Format the date for the API
-            formatted_date = date.replace('-', '/')
-            
-            # First get the list of available images for the date
+            # First get the list of available dates
             params = {'api_key': self.api_key}
-            response = requests.get(f"{self.epic_url}/natural/date/{date}", params=params)
+            response = requests.get(f"{self.epic_url}/available", params=params)
+            response.raise_for_status()
+            available_dates = response.json()
+            
+            if not available_dates:
+                self.logger.warning("No EPIC images available")
+                return {"error": "No EPIC images available"}
+            
+            # Get the most recent date
+            most_recent_date = available_dates[0]
+            
+            # Get images for the most recent date
+            response = requests.get(f"{self.epic_url}/natural/date/{most_recent_date}", params=params)
             response.raise_for_status()
             images = response.json()
             
             if not images:
-                self.logger.warning(f"No EPIC images found for date: {date}")
-                return {"error": f"No EPIC images found for date: {date}"}
+                self.logger.warning(f"No EPIC images found for date: {most_recent_date}")
+                return {"error": f"No EPIC images found for date: {most_recent_date}"}
             
             # Process the images to include the full image URL
             for image in images:
                 # Construct the image URL using the correct format
                 image_id = image['image']
-                year = date[:4]
-                month = date[5:7]
-                day = date[8:10]
+                year = most_recent_date[:4]
+                month = most_recent_date[5:7]
+                day = most_recent_date[8:10]
                 image['url'] = f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
                 image['date'] = image['date']  # Keep the original date format
             
