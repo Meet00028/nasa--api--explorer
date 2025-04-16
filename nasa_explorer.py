@@ -71,7 +71,7 @@ class NASAExplorer:
             
             # First get the list of available images for the date
             params = {'api_key': self.api_key}
-            response = requests.get(f"{self.epic_url}/date/{date}", params=params)
+            response = requests.get(f"{self.epic_url}/natural/date/{date}", params=params)
             response.raise_for_status()
             images = response.json()
             
@@ -81,7 +81,12 @@ class NASAExplorer:
             
             # Process the images to include the full image URL
             for image in images:
-                image['url'] = f"https://epic.gsfc.nasa.gov/archive/natural/{formatted_date}/png/{image['image']}.png"
+                # Construct the image URL using the correct format
+                image_id = image['image']
+                year = date[:4]
+                month = date[5:7]
+                day = date[8:10]
+                image['url'] = f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
                 image['date'] = image['date']  # Keep the original date format
             
             return images
