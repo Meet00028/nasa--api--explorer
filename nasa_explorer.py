@@ -104,16 +104,36 @@ class NASAExplorer:
                 }
             
             # Process the images to include the full image URL
+            processed_images = []
             for image in images:
+                if not image or 'image' not in image:
+                    continue
+                    
                 # Construct the image URL using the correct format
                 image_id = image['image']
                 year = most_recent_date[:4]
                 month = most_recent_date[5:7]
                 day = most_recent_date[8:10]
-                image['url'] = f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
-                image['date'] = image['date']  # Keep the original date format
+                
+                processed_images.append({
+                    "image": image_id,
+                    "caption": image.get('caption', 'EPIC Earth Image'),
+                    "date": image.get('date', most_recent_date),
+                    "url": f"https://epic.gsfc.nasa.gov/archive/natural/{year}/{month}/{day}/png/{image_id}.png"
+                })
             
-            return {"images": images}
+            if not processed_images:
+                self.logger.warning("No valid EPIC images found, using default Earth image")
+                return {
+                    "images": [{
+                        "image": "default_earth",
+                        "caption": "Default Earth Image",
+                        "date": datetime.now().strftime('%Y-%m-%d'),
+                        "url": "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2072&q=80"
+                    }]
+                }
+            
+            return {"images": processed_images}
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Error fetching EPIC images: {str(e)}, using default Earth image")
             return {
