@@ -1,7 +1,12 @@
-from flask import Flask, render_template, request, jsonify
-from nasa_explorer import NASAExplorer
+# Standard library imports
 import logging
+
+# Third-party imports
+from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
+
+# Local imports
+from nasa_explorer import NASAExplorer
 from config import NASA_API_KEY, APOD_URL, MARS_URL, EPIC_URL
 
 # Configure logging
