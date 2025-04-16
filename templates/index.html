@@ -10,26 +10,48 @@
         :root {
             --primary-color: #0B3D91;
             --secondary-color: #FC3D21;
-            --background-color: #000000;
+            --background-color: #030712;
             --text-color: #FFFFFF;
             --card-shadow: 0 8px 32px rgba(11, 61, 145, 0.2);
-            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-bg: rgba(13, 18, 30, 0.75);
             --card-border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .star {
+            position: fixed;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--twinkle-duration, 4s) infinite var(--twinkle-delay, 0s);
+            pointer-events: none;
         }
 
         body {
             background-color: var(--background-color);
             color: var(--text-color);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80');
-            background-size: cover;
-            background-attachment: fixed;
-            background-position: center;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(3, 7, 18, 0.5) 0%, rgba(3, 7, 18, 0.95) 100%);
+            z-index: -1;
         }
 
         .navbar {
-            background: rgba(11, 61, 145, 0.95);
+            background: rgba(3, 7, 18, 0.95);
             backdrop-filter: blur(10px);
             padding: 1rem 0;
             margin-bottom: 2rem;
@@ -72,14 +94,14 @@
         }
 
         .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
             border: var(--card-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             border-radius: 20px;
             margin: 30px 0;
-            box-shadow: var(--card-shadow);
             transition: all 0.4s ease;
-            background: var(--card-bg);
             overflow: hidden;
-            backdrop-filter: blur(10px);
         }
 
         .card:hover {
@@ -88,9 +110,9 @@
         }
 
         .card-header {
-            background: linear-gradient(45deg, var(--primary-color), #1a5f9e);
+            background: linear-gradient(45deg, #0B3D91, #1a1f3c);
             color: white;
-            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 1.5rem;
             border-radius: 20px 20px 0 0 !important;
             position: relative;
@@ -482,6 +504,34 @@
         fetchAPOD();
         fetchMarsPhotos();
         fetchEPIC();
+
+        function createStars() {
+            const body = document.body;
+            const numberOfStars = 200;
+            
+            for (let i = 0; i < numberOfStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Random size between 1 and 3 pixels
+                const size = Math.random() * 2 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                
+                // Random position
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation delay and duration
+                star.style.setProperty('--twinkle-delay', `${Math.random() * 4}s`);
+                star.style.setProperty('--twinkle-duration', `${Math.random() * 3 + 2}s`);
+                
+                body.appendChild(star);
+            }
+        }
+
+        // Call createStars after the page loads
+        window.addEventListener('load', createStars);
     </script>
 </body>
 </html> 
