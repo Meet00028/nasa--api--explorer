@@ -17,6 +17,36 @@
             --card-border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        :root[data-theme="light"] {
+            --background-color: #FFFFFF;
+            --text-color: #000000;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle i {
+            font-size: 1.1rem;
+        }
+
         @keyframes twinkle {
             0%, 100% { opacity: 0.3; }
             50% { opacity: 1; }
@@ -37,9 +67,21 @@
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
+            transition: background-color 0.3s ease;
         }
 
-        body::before {
+        body[data-theme="light"] {
+            background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80');
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+        }
+
+        body[data-theme="light"] .star {
+            display: none;
+        }
+
+        body[data-theme="dark"]::before {
             content: '';
             position: fixed;
             top: 0;
@@ -300,13 +342,19 @@
         }
     </style>
 </head>
-<body>
+<body data-theme="dark">
     <nav class="navbar">
         <div class="container">
-            <span class="navbar-brand">
-                <img src="https://www.nasa.gov/wp-content/themes/nasa/assets/images/nasa-logo.svg" alt="NASA Logo" class="nasa-logo">
-                NASA API Explorer
-            </span>
+            <div class="d-flex justify-content-between align-items-center w-100">
+                <span class="navbar-brand">
+                    <img src="https://www.nasa.gov/wp-content/themes/nasa/assets/images/nasa-logo.svg" alt="NASA Logo" class="nasa-logo">
+                    NASA API Explorer
+                </span>
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                    <span class="theme-text">Switch Theme</span>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -505,24 +553,56 @@
         fetchMarsPhotos();
         fetchEPIC();
 
-        function createStars() {
+        function toggleTheme() {
+            const root = document.documentElement;
             const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            body.setAttribute('data-theme', newTheme);
+            root.setAttribute('data-theme', newTheme);
+            
+            const themeToggle = document.querySelector('.theme-toggle');
+            const icon = themeToggle.querySelector('i');
+            const text = themeToggle.querySelector('.theme-text');
+            
+            if (newTheme === 'dark') {
+                icon.className = 'fas fa-sun';
+                text.textContent = 'Light Mode';
+                createStars();
+            } else {
+                icon.className = 'fas fa-moon';
+                text.textContent = 'Dark Mode';
+                removeStars();
+            }
+
+            // Save theme preference
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function removeStars() {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => star.remove());
+        }
+
+        function createStars() {
+            removeStars(); // Remove existing stars first
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'light') return;
+            
             const numberOfStars = 200;
             
             for (let i = 0; i < numberOfStars; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
                 
-                // Random size between 1 and 3 pixels
                 const size = Math.random() * 2 + 1;
                 star.style.width = `${size}px`;
                 star.style.height = `${size}px`;
                 
-                // Random position
                 star.style.left = `${Math.random() * 100}%`;
                 star.style.top = `${Math.random() * 100}%`;
                 
-                // Random animation delay and duration
                 star.style.setProperty('--twinkle-delay', `${Math.random() * 4}s`);
                 star.style.setProperty('--twinkle-duration', `${Math.random() * 3 + 2}s`);
                 
@@ -530,8 +610,27 @@
             }
         }
 
-        // Call createStars after the page loads
-        window.addEventListener('load', createStars);
+        // Initialize theme from saved preference
+        window.addEventListener('load', () => {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            const body = document.body;
+            const root = document.documentElement;
+            const themeToggle = document.querySelector('.theme-toggle');
+            const icon = themeToggle.querySelector('i');
+            const text = themeToggle.querySelector('.theme-text');
+            
+            body.setAttribute('data-theme', savedTheme);
+            root.setAttribute('data-theme', savedTheme);
+            
+            if (savedTheme === 'dark') {
+                icon.className = 'fas fa-sun';
+                text.textContent = 'Light Mode';
+                createStars();
+            } else {
+                icon.className = 'fas fa-moon';
+                text.textContent = 'Dark Mode';
+            }
+        });
     </script>
 </body>
 </html> 
