@@ -60,6 +60,11 @@ def get_epic():
         nasa = get_nasa_explorer()
         logger.info("Fetching EPIC images...")
         epic = nasa.get_epic_images(date)
+        
+        if 'error' in epic:
+            logger.warning(f"EPIC Images Warning: {epic['error']}")
+            return jsonify(epic), 404
+            
         logger.info("EPIC images fetched successfully")
         return jsonify(epic)
     except Exception as e:

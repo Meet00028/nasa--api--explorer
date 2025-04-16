@@ -63,14 +63,31 @@ class NASAExplorer:
         """Get Earth Polychromatic Imaging Camera (EPIC) images."""
         try:
             if not date:
-                date = datetime.now().strftime('%Y-%m-%d')
+                # Get yesterday's date as EPIC images are typically available with a 1-day delay
+                date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+            
+            # Format the date for the API
+            formatted_date = date.replace('-', '/')
+            
+            # First get the list of available images for the date
             params = {'api_key': self.api_key}
-            response = requests.get(f"{self.epic_url}/{date}", params=params)
+            response = requests.get(f"{self.epic_url}/date/{date}", params=params)
             response.raise_for_status()
-            return response.json()
+            images = response.json()
+            
+            if not images:
+                self.logger.warning(f"No EPIC images found for date: {date}")
+                return {"error": f"No EPIC images found for date: {date}"}
+            
+            # Process the images to include the full image URL
+            for image in images:
+                image['url'] = f"https://epic.gsfc.nasa.gov/archive/natural/{formatted_date}/png/{image['image']}.png"
+                image['date'] = image['date']  # Keep the original date format
+            
+            return images
         except requests.exceptions.RequestException as e:
             self.logger.error(f"Error fetching EPIC images: {str(e)}")
-            return None
+            return {"error": f"Error fetching EPIC images: {str(e)}"}
     
     def download_and_show_image(self, image_url, title="NASA Image"):
         """Download and display an image"""
