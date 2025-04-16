@@ -53,6 +53,11 @@ class NASAExplorer:
             if not data.get('photos'):
                 self.logger.warning(f"No photos found for rover {rover} on sol {sol} with camera {camera}")
                 return {"error": f"No photos found for rover {rover} on sol {sol} with camera {camera}"}
+            
+            # Convert HTTP URLs to HTTPS
+            for photo in data['photos']:
+                if photo.get('img_src', '').startswith('http://'):
+                    photo['img_src'] = photo['img_src'].replace('http://', 'https://')
                 
             return data
         except requests.exceptions.RequestException as e:
